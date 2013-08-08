@@ -12,19 +12,20 @@
 		// minified (especially when both are regularly referenced in your plugin).
 
 		// Create the defaults once
-		var pluginName = "colinstable",
-				defaults = {
-				propertyName: "value"
+		var pluginName = "colinstable";
+
+		var defaults = {
+			pagination : false,
+			items_per_page : 8,
+			draggable : false
 		};
 
 		// The actual plugin constructor
 		function ColinsTable ( element, options ) {
-				this.element = element;
-				// jQuery has an extend method which merges the contents of two or
-				// more objects, storing the result in the first object. The first object
-				// is generally empty as we don't want to alter the default options for
-				// future instances of the plugin
-				this.settings = $.extend( {}, defaults, options );
+				this.table = element;
+				this.$table = $(element);
+				// merge defaults and user  options
+				this.options = $.extend( {}, defaults, options );
 				this._defaults = defaults;
 				this._name = pluginName;
 				this.init();
@@ -32,8 +33,73 @@
 
 		ColinsTable.prototype = {
 				init: function () {
-						console.log("It worked");
+						var self = this;
+						this.rowsPromise = null;
+						this.tbody = this.$table.children('tbody')[0];
+
+						if(this.options.url)
+							this.fetchRecords(this.options.url);
+
+						this.setup_extra_html(this.$table);
+
+						if(this.options.url) this.createRows();
+
+
 				},
+				// Create a container around the table and add a footer div
+				setup_extra_html : function(table){
+					this.container = $('<div>', {
+						'class' : 'cltable_container'
+					});
+					this.footer = document.createElement('div');
+					this.footer.className = 'cltable_footer';
+
+					table.wrap(this.container);
+				//	this.container.append(this.footer);
+					$('.cltable_container').append(self.footer);
+					window.c = this.container;
+				},
+				// Get rows from a url that the user passed in
+				fetchRecords : function(url){
+					var self = this;
+					var dfd = $.ajax({
+						dataType : 'json',
+						url : url,
+						type : 'GET'
+					});
+
+					this.rowsPromise = $.Deferred();
+					dfd.done(function(data){
+						console.log("in here");
+						self.rowsPromise.resolve(data);
+					})
+					.fail(function(err){
+
+					});
+				},
+				getRows : function(){
+					// if its null, it means that we are just getting the rows that
+					// are already in the table, otherwise we are getting the rows
+					// from a server, so we return the promise
+					if(this.rowsPromise === null){
+						this.rowsPromise = $.Deferred();
+						var rows = this.$table.children('tbody').children('tr');
+						this.rowsPromise.resolve(rows);
+
+					}else{
+						return this.rowsPromise;
+					}
+				},
+				createRows  :function(rows){
+					console.log(this);
+					this.getRows().done(function(data){
+
+						console.log(data);
+					})
+					.fail(function(err){
+						console.log("something went wrong in the createRows()")
+					});
+				}
 			
 		};
 
