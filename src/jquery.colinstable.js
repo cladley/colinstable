@@ -24,6 +24,7 @@
 		function ColinsTable ( element, options ) {
 				this.table = element;
 				this.$table = $(element);
+
 				// merge defaults and user  options
 				this.options = $.extend( {}, defaults, options );
 				this._defaults = defaults;
@@ -36,15 +37,18 @@
 						var self = this;
 						this.rowsPromise = null;
 						this.tbody = this.$table.children('tbody')[0];
-
-						if(this.options.url)
+						this.$tbody = $(this.tbody);
+						window.bb = this.$tbody;
+						if(this.options.url){
 							this.fetchRecords(this.options.url);
+							// Not implemented yet
+							//this.add_loading_overlay();
+						}
+							
 
 						this.setup_extra_html(this.$table);
 
 						if(this.options.url) this.createRows();
-
-
 				},
 				// Create a container around the table and add a footer div
 				setup_extra_html : function(table){
@@ -59,6 +63,9 @@
 					$('.cltable_container').append(self.footer);
 			
 				},
+				// places a loading screen on top of the tbody element when 
+				// rows are being fetched from the server
+				
 				// Get rows from a url that the user passed in
 				fetchRecords : function(url){
 				
@@ -84,7 +91,7 @@
 					// from a server, so we return the promise
 					if(this.rowsPromise === null){
 						this.rowsPromise = $.Deferred();
-						var rows = this.$table.children('tbody').children('tr');
+						var rows = this.$tbody.children('tr');
 						this.rowsPromise.resolve(rows);
 
 					}else{
@@ -107,7 +114,7 @@
 							}
 							frag.appendChild(tr);
 						});
-						self.table.appendChild(frag);
+						self.tbody.appendChild(frag);
 				
 					})
 					.fail(function(err){
