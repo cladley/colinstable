@@ -150,12 +150,12 @@
 			},
 			onMouseUp: function(e){
 				this.isDragging = false;
-				this.$table.css('user-select', '');
-				this.row_being_dragged.css({
-					'opactiy' : '1',
-					'backgroundColor' : ''
-				});
-				this.$tbody.off('mouseup', this.onMouseUp);
+			this.$table.css('user-select', '');
+			this.row_being_dragged.css({
+				'opacity': '1',
+				backgroundColor : ''
+			});
+			this.$tbody.off('mouseup', this.onMouseUp);
 			},
 			onMouseOver : function(e){
 				if(this.isDragging){
