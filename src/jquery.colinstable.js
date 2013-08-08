@@ -57,10 +57,11 @@
 					table.wrap(this.container);
 				//	this.container.append(this.footer);
 					$('.cltable_container').append(self.footer);
-					window.c = this.container;
+			
 				},
 				// Get rows from a url that the user passed in
 				fetchRecords : function(url){
+				
 					var self = this;
 					var dfd = $.ajax({
 						dataType : 'json',
@@ -70,11 +71,11 @@
 
 					this.rowsPromise = $.Deferred();
 					dfd.done(function(data){
-						console.log("in here");
+					
 						self.rowsPromise.resolve(data);
 					})
 					.fail(function(err){
-
+						console.log(err);
 					});
 				},
 				getRows : function(){
@@ -91,10 +92,23 @@
 					}
 				},
 				createRows  :function(rows){
-					console.log(this);
+					var self = this;
+					var frag = document.createDocumentFragment();
+					var trRows = [];
+			
 					this.getRows().done(function(data){
-
-						console.log(data);
+				
+						$.each(data, function(indx, obj){
+							var tr = document.createElement('tr');
+							for(var key in obj){
+								var td = document.createElement('td');
+								td.textContent = obj[key];
+								tr.appendChild(td);
+							}
+							frag.appendChild(tr);
+						});
+						self.table.appendChild(frag);
+				
 					})
 					.fail(function(err){
 						console.log("something went wrong in the createRows()")
