@@ -2,6 +2,13 @@
 // scripts and/or other plugins which may not be closed properly.
 ;(function ( $, window, document, undefined ) {
 
+		// Helper method for jQuery
+		$.fn.swap = function(other) {
+			var temp = $(this).clone(true);
+    		$(this).replaceWith($(other).after(temp));
+    		return temp;
+		};
+
 		
 		/////////////////////////////////////////////////////////
 		//  sorter  :  Setup and implements sorting on columns //
@@ -26,7 +33,8 @@
 				});
 
 				var ths = this.$table.find('th');
-
+				// Find out which rows are to be sorted and setup 
+				// click on each one, add an icon.
 				for(var i = 0; i < ths.length; i++){
 					var text = ths[i].textContent;
 
@@ -60,6 +68,8 @@
 				});
 				return span;
 			},
+			// Icon gets changed to reflect the direction of
+			// the sorting
 			update_icon : function(icon, dir){
 				var $icon = $(icon);
 				if(dir === 'asc'){
@@ -107,11 +117,67 @@
 					return 0;
 			}
 
-
 		};
 
+		/////////////////////////////////////////////////////////
+		//  dragger  :  Enable dragging of rows around         //
+		/////////////////////////////////////////////////////////
+		var dragger = {
 
+			init : function(table, $table, $tbody){
+				this.table = $table;
+				this.$table = $table;
+				this.$tbody = $tbody;
+				this.$thead = this.$table.children('thead');
+				this.thead_height = this.$thead.outerHeight();
+				this.table_top_position = this.$table.offset().top;
+				this.isDragging = false;
+				this.$tbody.on('mousedown', 'tr', $.proxy(this.onMouseDown, this));
+				this.$tbody.on('mouseover', 'tr', $.proxy(this.onMouseOver, this));
+			},
+			onMouseDown : function(e){
+				this.$table.css({
+					'user-select' : 'none'
+				});
+				this.row_being_dragged = $(e.currentTarget);
+				this.row_being_dragged_index = e.currentTarget.rowIndex;
+				this.row_being_dragged.css({
+					'opacity' : '0.4',
+					backgroundColor : 'lightblue'
+				});
+				this.isDragging = true;
+				this.$tbody.on('mouseup', 'tr', $.proxy(this.onMouseUp, this));
+			},
+			onMouseUp: function(e){
+				this.isDragging = false;
+				this.$table.css('user-select', '');
+				this.row_being_dragged.css({
+					'opactiy' : '1',
+					'backgroundColor' : ''
+				});
+				this.$tbody.off('mouseup', this.onMouseUp);
+			},
+			onMouseOver : function(e){
+				if(this.isDragging){
+					var row = $(e.currentTarget);
+					var row_index = e.currentTarget.rowIndex;
 
+					if(row_index !== this.row_being_dragged_index){
+						this.swaprows(row_index, this.row_being_dragged_index,this.$tbody);
+						if(this.row_being_dragged_index > row_index)
+							this.row_being_dragged_index--;
+						else
+							this.row_being_dragged_index++;
+					}
+				}
+			},
+			swaprows : function(i,j,tbody){
+				var r1 = tbody.children('tr')[i-1];
+				var r2 = tbody.children('tr')[j-1];
+				$(r1).swap(r2);
+			}
+
+		};
 
 
 
@@ -122,10 +188,11 @@
 		var defaults = {
 			pagination : false,
 			items_per_page : 8,
-			draggable : false
+			draggable : true
 		};
-
-		// The actual plugin constructor
+		//////////////////////////////////////////////
+		//  ColinsTable constructor function        //
+		//////////////////////////////////////////////
 		function ColinsTable ( element, options ) {
 				this.table = element;
 				this.$table = $(element);
@@ -156,9 +223,12 @@
 					
 						if(this.options.sortOn instanceof Array){
 							var sort_control = Object.create(sorter);
-
-							debugger;
 							sort_control.init(this.table,this.$table,this.options.sortOn);
+						}
+
+						if(self.options.draggable){
+							var dragTable = Object.create(dragger);
+	      					dragTable.init(this.table,this.$table, this.$tbody);
 						}
 				},
 				// Create a container around the table and add a footer div
