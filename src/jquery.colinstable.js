@@ -15,6 +15,8 @@
 			},
 			// We setup sorting on column names that the user passes in
 			setup_sorting : function(column_names){
+				debugger;
+				var self = this;
 				var dict = {};
 				// first record which columns and place in object
 				// so that we can easily find out later if a column
@@ -23,14 +25,95 @@
 					dict[column] = '_';
 				});
 
+				var ths = this.$table.find('th');
 
+				for(var i = 0; i < ths.length; i++){
+					var text = ths[i].textContent;
 
+					if(dict[text]){
 
+						(function(col){
+							// create the sort icon
+							var icon = self.create_sort_icon();
+							ths[i].appendChild(icon.get(0));
+							ths[i].setAttribute('data-dir', 'asc');
+							var thead = ths[col];
+							var dir = 'asc';
 
+							ths[col].addEventListener('click', function(e){
+								var cmpfunc = (dir === "asc") ? self.desc_sort : self.asc_sort;
+								self.update_icon(icon,dir);
+								dir = (dir === "asc") ? "desc" : "asc";
+
+								self.sort_column(col,cmpfunc);
+
+							}, false);
+
+						})(i);
+					}
+				}
+			},
+
+			create_sort_icon : function(){
+				var span = $('<span>', {
+					'class' : 'sortIcon sort_icon_decend'
+				});
+				return span;
+			},
+			update_icon : function(icon, dir){
+				var $icon = $(icon);
+				if(dir === 'asc'){
+					$icon.removeClass('sort_icon_decend');
+					$icon.addClass('sort_icon_ascend');
+				}else{
+					$icon.removeClass('sort_icon_ascend');
+					$icon.addClass('sort_icon_decend');
+				}
+
+			},
+
+			sort_column : function(column, cmpfunc){
+				var tbody = this.table.getElementsByTagName('tbody')[0];
+				var trs = tbody.getElementsByTagName('tr');
+				trs = Array.prototype.slice.call(trs);
+	
+
+				trs.sort(function(r1,r2){
+					var t1 = r1.getElementsByTagName('td')[column].textContent.toLowerCase();
+					var t2 = r2.getElementsByTagName('td')[column].textContent.toLowerCase();
+					return cmpfunc(t1,t2);
+				});
+
+				trs.forEach(function(item,idx){
+					tbody.appendChild(item);
+				});
+
+			},
+
+			asc_sort : function(obj1,obj2){
+				if(obj1 < obj2)
+					return -1;
+				else if(obj1 > obj2)
+					return 1;
+				else 
+					return 0;
+			},
+			desc_sort : function(obj1,obj2){
+				if(obj1 < obj2)
+					return 1;
+				else if(obj1 > obj2)
+					return -1;
+				else 
+					return 0;
 			}
 
 
 		};
+
+
+
+
+
 
 
 		// Create the defaults once
@@ -49,6 +132,7 @@
 
 				// merge defaults and user  options
 				this.options = $.extend( {}, defaults, options );
+				console.log(this.options);
 				this._defaults = defaults;
 				this._name = pluginName;
 				this.init();
@@ -60,7 +144,7 @@
 						this.rowsPromise = null;
 						this.tbody = this.$table.children('tbody')[0];
 						this.$tbody = $(this.tbody);
-						window.bb = this.$tbody;
+				
 						if(this.options.url){
 							this.fetchRecords(this.options.url);
 							// Not implemented yet
@@ -69,6 +153,13 @@
 							
 						this.setup_extra_html(this.$table);
 						if(this.options.url) this.createRows();
+					
+						if(this.options.sortOn instanceof Array){
+							var sort_control = Object.create(sorter);
+
+							debugger;
+							sort_control.init(this.table,this.$table,this.options.sortOn);
+						}
 				},
 				// Create a container around the table and add a footer div
 				setup_extra_html : function(table){
