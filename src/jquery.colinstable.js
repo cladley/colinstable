@@ -2,14 +2,36 @@
 // scripts and/or other plugins which may not be closed properly.
 ;(function ( $, window, document, undefined ) {
 
-		// undefined is used here as the undefined global variable in ECMAScript 3 is
-		// mutable (ie. it can be changed by someone else). undefined isn't really being
-		// passed in so we can ensure the value of it is truly undefined. In ES5, undefined
-		// can no longer be modified.
+		
+		/////////////////////////////////////////////////////////
+		//  sorter  :  Setup and implements sorting on columns //
+		/////////////////////////////////////////////////////////
+		var sorter = {
+			init : function(table,$table,columns){
+				this.table = table;
+				this.$table = $table;
+				this.columns = columns;
+				this.setup_sorting(this.columns);
+			},
+			// We setup sorting on column names that the user passes in
+			setup_sorting : function(column_names){
+				var dict = {};
+				// first record which columns and place in object
+				// so that we can easily find out later if a column
+				// is to be sorted
+				$.each(column_names, function(idx,column){
+					dict[column] = '_';
+				});
 
-		// window and document are passed through as local variable rather than global
-		// as this (slightly) quickens the resolution process and can be more efficiently
-		// minified (especially when both are regularly referenced in your plugin).
+
+
+
+
+			}
+
+
+		};
+
 
 		// Create the defaults once
 		var pluginName = "colinstable";
@@ -45,9 +67,7 @@
 							//this.add_loading_overlay();
 						}
 							
-
 						this.setup_extra_html(this.$table);
-
 						if(this.options.url) this.createRows();
 				},
 				// Create a container around the table and add a footer div
