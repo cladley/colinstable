@@ -10,9 +10,9 @@
 		};
 
 		
-		/////////////////////////////////////////////////////////
-		//  sorter  :  Setup and implements sorting on columns //
-		/////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//  sorter   :  Setup and implements sorting on columns //
+		//////////////////////////////////////////////////////////
 		var sorter = {
 			init : function(table,$table,columns){
 				this.table = table;
@@ -119,9 +119,9 @@
 
 		};
 
-		/////////////////////////////////////////////////////////
-		//  dragger  :  Enable dragging of rows around         //
-		/////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////
+		//  dragger  :  Enable dragging of rows around          //
+		//////////////////////////////////////////////////////////
 		var dragger = {
 
 			init : function(table, $table, $tbody){
@@ -150,12 +150,12 @@
 			},
 			onMouseUp: function(e){
 				this.isDragging = false;
-			this.$table.css('user-select', '');
-			this.row_being_dragged.css({
-				'opacity': '1',
-				backgroundColor : ''
-			});
-			this.$tbody.off('mouseup', this.onMouseUp);
+				this.$table.css('user-select', '');
+				this.row_being_dragged.css({
+					'opacity': '1',
+					backgroundColor : ''
+				});
+				this.$tbody.off('mouseup', this.onMouseUp);
 			},
 			onMouseOver : function(e){
 				if(this.isDragging){
@@ -179,7 +179,106 @@
 
 		};
 
+		//////////////////////////////////////////////////////////
+		// paginator : implements pagination on the table       //
+		//////////////////////////////////////////////////////////
+		var paginator = {
+			init : function(table,getRows, items_per_page){
+			
+				var self = this;
+				this.table = table;
+				// Have to change this
+				this.footer = this.create_footer();
+				$('.cltable_container').append(self.footer);
+			
 
+				getRows().done(function(data){
+					self.rows = data;
+					self.row_count = self.rows.length;
+					self.rows_per_page = items_per_page;
+					self.num_of_pages = Math.ceil(self.row_count / self.rows_per_page);
+					self.draw_pagination_control(self.num_of_pages);
+					self.showPage(1);
+				});
+				
+			},
+			create_footer : function(){
+				var div = document.createElement('div');
+				div.className = 'cltable_footer';
+				return div;
+			},
+			draw_pagination_control : function(numPages){
+				var fragment = document.createDocumentFragment();
+				this.btnFirst = this.create_pagin_button('first');
+				this.btnPrev = this.create_pagin_button('prev');
+				this.btnNext = this.create_pagin_button('next');
+				this.btnLast = this.create_pagin_button('last');
+
+				fragment.appendChild(this.btnFirst);
+				fragment.appendChild(this.btnPrev);
+				this.numbersBar = $('<div>', {
+					'class' : 'numbersBar'
+				});
+
+				var buttons = this.createNumberBarButtons(1,numPages);
+				this.updateNumbersBar(this.numbersBar, buttons);
+				this.barCounter = 1;
+				this.firstScreen = true;
+
+				fragment.appendChild(this.numbersBar.get(0));
+				fragment.appendChild(this.btnNext);
+				fragment.appendChild(this.btnLast);
+			
+				this.footer.appendChild(fragment);
+
+
+			},
+			createNumberBarButtons : function(from,to){
+				var btnNums;
+				var buttons = [];
+				var diff = to - from;
+				var max;
+
+				if(diff > 4){
+					this.isShortBar = true;
+					btnNums = [from, from+1, from+2, '...', to];
+					max = from + 4;
+				}else{
+					this.isShortBar = false;
+					btnNums	 = [from,from+1,from+2, from+3, from+4];
+					max = from + diff;
+				}
+				var counter = 0;
+				for(var i = from; i <= max; i++){
+					buttons.push(this.create_pagin_button(btnNums.shift(), ++counter));
+				}
+				return buttons;
+			},
+
+			create_pagin_button : function(text,index){
+				var span = document.createElement('span');
+				var a = document.createElement('a');
+				a.textContent = text;
+				a.setAttribute('data-btntype', text);
+				a.setAttribute('data-index', index);
+				return a;
+			},
+
+			updateNumbersBar : function(bar, buttons){
+				bar.empty();
+				for(var i = 0; i < buttons.length; i++){
+					bar.append(buttons[i]);
+				}
+			},
+
+			page : function(pageNum){
+			
+
+			}
+
+
+
+		};
 
 
 		// Create the defaults once
@@ -199,7 +298,6 @@
 
 				// merge defaults and user  options
 				this.options = $.extend( {}, defaults, options );
-				console.log(this.options);
 				this._defaults = defaults;
 				this._name = pluginName;
 				this.init();
@@ -213,6 +311,7 @@
 						this.$tbody = $(this.tbody);
 				
 						if(this.options.url){
+			
 							this.fetchRecords(this.options.url);
 							// Not implemented yet
 							//this.add_loading_overlay();
@@ -226,11 +325,23 @@
 							sort_control.init(this.table,this.$table,this.options.sortOn);
 						}
 
+						if(this.options.pagination){
+					
+							var pagtor = Object.create(paginator);
+							pagtor.init(this.table,$.proxy(this.getRows, this),this.options.items_per_page);
+						}
+
 						if(self.options.draggable){
 							var dragTable = Object.create(dragger);
 	      					dragTable.init(this.table,this.$table, this.$tbody);
 						}
 				},
+
+				random : function(){
+					console.log("this is random");
+					console.log(this);
+				},
+
 				// Create a container around the table and add a footer div
 				setup_extra_html : function(table){
 					this.container = $('<div>', {
@@ -274,10 +385,8 @@
 						this.rowsPromise = $.Deferred();
 						var rows = this.$tbody.children('tr');
 						this.rowsPromise.resolve(rows);
-
-					}else{
-						return this.rowsPromise;
 					}
+					return this.rowsPromise;
 				},
 				createRows  :function(rows){
 					var self = this;
