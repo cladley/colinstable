@@ -183,10 +183,11 @@
 		// paginator : implements pagination on the table       //
 		//////////////////////////////////////////////////////////
 		var paginator = {
-			init : function(table,getRows, items_per_page){
+			init : function(table,tbody,getRows, items_per_page){
 			
 				var self = this;
 				this.table = table;
+				this.tbody = tbody;
 				// Have to change this
 				this.footer = this.create_footer();
 				$('.cltable_container').append(self.footer);
@@ -271,8 +272,36 @@
 				}
 			},
 
+			showPage : function(pageNum){
+				var rows = this.page(pageNum);
+				var frag = document.createDocumentFragment();
+				this.current_page = pageNum;
+				this.tbody.innerHTML = "";
+				
+				if(rows && pageNum > 0){
+					// if they are plain objects, create tr's for them
+					if(!rows[0].tagName || rows[0].tagName !== 'TR'){
+						rows = this.createRows(rows);
+					}
+
+					if(rows.length < this.rows_per_page){
+						// TODO: fill in empty rows if any
+					}
+
+					for(var i = 0; i < rows.length;i++){
+						frag.appendChild(rows[i]);
+					}
+					this.tbody.appendChild(frag);
+				}
+
+			},
 			page : function(pageNum){
-			
+				if(pageNum <= this.num_of_pages){
+					--pageNum;
+					var min = this.rows_per_page * pageNum;
+					var max = min + this.rows_per_page;
+					return this.rows.slice(min,max);
+				}
 
 			}
 
@@ -328,7 +357,7 @@
 						if(this.options.pagination){
 					
 							var pagtor = Object.create(paginator);
-							pagtor.init(this.table,$.proxy(this.getRows, this),this.options.items_per_page);
+							pagtor.init(this.table,this.tbody,$.proxy(this.getRows, this),this.options.items_per_page);
 						}
 
 						if(self.options.draggable){
