@@ -198,6 +198,10 @@
 					self.row_count = self.rows.length;
 					self.rows_per_page = items_per_page;
 					self.num_of_pages = Math.ceil(self.row_count / self.rows_per_page);
+					if(self.num_of_pages < 5)
+						self.max_counter = self.num_of_pages;
+					else
+						self.max_counter = 5;
 					self.draw_pagination_control(self.num_of_pages);
 					self.showPage(1);
 				});
@@ -223,14 +227,86 @@
 
 				var buttons = this.createNumberBarButtons(1,numPages);
 				this.updateNumbersBar(this.numbersBar, buttons);
-				this.barCounter = 1;
-				this.firstScreen = true;
+				this.bar_counter = 1;
+				this.first_screen = true;
 
 				fragment.appendChild(this.numbersBar.get(0));
 				fragment.appendChild(this.btnNext);
 				fragment.appendChild(this.btnLast);
 			
 				this.footer.appendChild(fragment);
+				$(this.footer).on('click', 'a', $.proxy(this.changePage,this));
+				this.toggleButtonClass($(buttons[0]));
+
+			},
+
+			// Need to change this function by having some sort of total counter from 1 to the num_pages.
+			// just increment
+
+			changePage : function(e){
+				var btn_pressed = $(e.target);
+				var val = e.target.dataset['btntype'];
+				var index = e.target.dataset['index'];
+				if(index) index = parseInt(index);
+
+				switch(val){
+					case "prev":
+						if(this.first_screen && this.bar_counter === 1) return;
+
+						if(!this.first_screen && this.bar_counter === 1){
+							var buttons = this.createNumberBarButtons(this.current_page -1, this.num_of_pages);
+							this.updateNumbersBar(this.numbersBar, buttons);
+						}
+						if(this.bar_counter > 1) this.bar_counter--;
+						
+						this.showPage(this.current_page -1);
+						if(this.current_page === 1) this.first_screen = true;
+						this.toggleButtonClass(this.current_page);
+						break;
+
+					case "next":
+						if(this.bar_counter === 3 && this.isShortBar){
+							var buttons = this.createNumberBarButtons(this.current_page -1,this.num_of_pages);
+							this.updateNumbersBar(this.numbersBar, buttons);
+							this.first_screen = false;
+						}else if(this.bar_counter < this.max_counter){
+							this.bar_counter++;
+						}
+
+					
+						this.showPage(this.current_page + 1);
+						this.toggleButtonClass(this.current_page);
+						break;
+
+					case "first":
+						this.showPage(1);
+						var buttons = this.createNumberBarButtons(1,this.num_of_pages);
+						this.updateNumbersBar(this.numbersBar, buttons);
+						this.first_screen = true;
+						this.bar_counter = 1;
+						this.toggleButtonClass(1);
+						break;
+
+					case "last":
+						this.showPage(this.num_of_pages);
+
+						if(this.isShortBar){
+							var buttons = this.createNumberBarButtons(this.num_of_pages - 4, this.num_of_pages);
+							this.updateNumbersBar(this.numbersBar,buttons);
+						}
+						this.first_screen = false;
+						this.toggleButtonClass(this.num_of_pages);
+
+						// NOTE, THIS IS WRONG IF WE ONLY HAVE LESS THAN 5 PAGES
+						this.bar_counter = 5;
+						break;
+
+					default:
+						this.toggleButtonClass(btn_pressed);
+						this.showPage(parseInt(val));
+						this.bar_counter = index;
+						break;
+				}
 
 
 			},
@@ -303,9 +379,28 @@
 					return this.rows.slice(min,max);
 				}
 
+			},
+			toggleButtonClass : function(btn){
+				var self = this;
+				if(this.current_button){
+					this.current_button.toggleClass("btndisabled");
+				}
+
+				if(typeof(btn) === "number"){
+					var spns = this.numbersBar.children();
+					$.each(spns, function(idx,item){
+						if(item.dataset['btntype'] == btn){
+							var $item = $(item);
+							$item.toggleClass('btndisabled');
+							self.current_button = $item;
+							return;
+						}
+					});
+				}else{
+					this.current_button = btn;
+					this.current_button.addClass("btndisabled");
+				}
 			}
-
-
 
 		};
 
@@ -315,7 +410,7 @@
 
 		var defaults = {
 			pagination : false,
-			items_per_page : 8,
+			items_per_page : 4,
 			draggable : true
 		};
 		//////////////////////////////////////////////
