@@ -202,6 +202,8 @@
 						self.max_counter = self.num_of_pages;
 					else
 						self.max_counter = 5;
+
+					self.abs_counter = 1;
 					self.draw_pagination_control(self.num_of_pages);
 					self.showPage(1);
 				});
@@ -247,6 +249,7 @@
 				var btn_pressed = $(e.target);
 				var val = e.target.dataset['btntype'];
 				var index = e.target.dataset['index'];
+			
 				if(index) index = parseInt(index);
 
 				switch(val){
@@ -257,7 +260,10 @@
 							var buttons = this.createNumberBarButtons(this.current_page -1, this.num_of_pages);
 							this.updateNumbersBar(this.numbersBar, buttons);
 						}
-						if(this.bar_counter > 1) this.bar_counter--;
+						if(this.bar_counter > 1){
+							this.bar_counter--;
+							this.abs_counter--;
+						} 
 						
 						this.showPage(this.current_page -1);
 						if(this.current_page === 1) this.first_screen = true;
@@ -265,6 +271,7 @@
 						break;
 
 					case "next":
+						if(this.isLastButton) return;
 						if(this.bar_counter === 3 && this.isShortBar){
 							var buttons = this.createNumberBarButtons(this.current_page -1,this.num_of_pages);
 							this.updateNumbersBar(this.numbersBar, buttons);
@@ -273,6 +280,7 @@
 							this.bar_counter++;
 						}
 
+						this.abs_counter++;
 					
 						this.showPage(this.current_page + 1);
 						this.toggleButtonClass(this.current_page);
@@ -284,6 +292,7 @@
 						this.updateNumbersBar(this.numbersBar, buttons);
 						this.first_screen = true;
 						this.bar_counter = 1;
+						this.abs_counter = 1;
 						this.toggleButtonClass(1);
 						break;
 
@@ -299,6 +308,7 @@
 
 						// NOTE, THIS IS WRONG IF WE ONLY HAVE LESS THAN 5 PAGES
 						this.bar_counter = 5;
+						this.abs_counter = this.num_of_pages;
 						break;
 
 					default:
@@ -329,6 +339,11 @@
 				for(var i = from; i <= max; i++){
 					buttons.push(this.create_pagin_button(btnNums.shift(), ++counter));
 				}
+		
+				var lastBtn = buttons.pop();
+			
+				lastBtn.setAttribute('data-isLast', 'true');
+				buttons.push(lastBtn);
 				return buttons;
 			},
 
@@ -382,23 +397,29 @@
 			},
 			toggleButtonClass : function(btn){
 				var self = this;
+				
 				if(this.current_button){
 					this.current_button.toggleClass("btndisabled");
 				}
 
 				if(typeof(btn) === "number"){
+			
 					var spns = this.numbersBar.children();
 					$.each(spns, function(idx,item){
 						if(item.dataset['btntype'] == btn){
 							var $item = $(item);
 							$item.toggleClass('btndisabled');
 							self.current_button = $item;
+					
+							self.isLastButton = $item.attr('data-isLast');
 							return;
 						}
 					});
 				}else{
 					this.current_button = btn;
 					this.current_button.addClass("btndisabled");
+					
+					this.isLastButton = this.current_button.attr('data-isLast');
 				}
 			}
 
