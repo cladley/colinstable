@@ -249,7 +249,7 @@
 				var btn_pressed = $(e.target);
 				var val = e.target.dataset['btntype'];
 				var index = e.target.dataset['index'];
-			
+				console.log(this.max_counter);
 				if(index) index = parseInt(index);
 
 				switch(val){
@@ -300,32 +300,32 @@
 						this.showPage(this.num_of_pages);
 
 						if(this.isShortBar){
-							var buttons = this.createNumberBarButtons(this.num_of_pages - 4, this.num_of_pages);
+							var buttons = this.createNumberBarButtons(this.num_of_pages - (this.max_counter -1), this.num_of_pages);
 							this.updateNumbersBar(this.numbersBar,buttons);
 						}
 						this.first_screen = false;
 						this.toggleButtonClass(this.num_of_pages);
 
 						// NOTE, THIS IS WRONG IF WE ONLY HAVE LESS THAN 5 PAGES
-						this.bar_counter = 5;
+						this.bar_counter = this.max_counter;
 						this.abs_counter = this.num_of_pages;
 						break;
 
 					default:
-
-					
+			
 						// If we click the last numbered button, then we have to redraw the numberBar to show the 
 						// last remaining from last - 4 to last
 						if(btn_pressed.attr('data-isLast')){
-							var buttons = this.createNumberBarButtons(this.num_of_pages - 4, this.num_of_pages);
+							if(this.isShortBar) this.first_screen = false;
+							var buttons = this.createNumberBarButtons(this.num_of_pages - (this.max_counter  -1) , this.num_of_pages);
 							this.updateNumbersBar(this.numbersBar, buttons);
 							this.toggleButtonClass(this.num_of_pages);
+							
 						}else{
 
 							this.toggleButtonClass(btn_pressed);
 						}
 
-						this.first_screen = false;
 
 						this.showPage(parseInt(val));
 						this.bar_counter = index;
@@ -432,7 +432,6 @@
 				}else{
 					this.current_button = btn;
 					this.current_button.addClass("btndisabled");
-					
 					this.isLastButton = this.current_button.attr('data-isLast');
 				}
 			}
@@ -445,7 +444,7 @@
 
 		var defaults = {
 			pagination : false,
-			items_per_page : 4,
+			items_per_page : 7,
 			draggable : true
 		};
 		//////////////////////////////////////////////
