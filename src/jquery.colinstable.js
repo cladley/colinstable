@@ -188,12 +188,14 @@
 				var self = this;
 				this.table = table;
 				this.tbody = tbody;
+				this.getRows = getRows;
 				// Have to change this
 				this.footer = this.create_footer();
 				$('.cltable_container').append(self.footer);
 			
 
 				getRows().done(function(data){
+			
 					self.rows = data;
 					self.row_count = self.rows.length;
 					self.rows_per_page = items_per_page;
@@ -203,12 +205,61 @@
 					else
 						self.max_counter = 5;
 
-					self.abs_counter = 1;
+					self.abs_counter = 1
+				
 					self.draw_pagination_control(self.num_of_pages);
 					self.showPage(1);
 				});
 				
 			},
+
+
+			createRows  :function(rows){
+					
+					var self = this;
+					var frag = document.createDocumentFragment();
+					var trRows = [];
+					
+
+					if(rows){
+						var trRows = [];
+						rows.forEach(function(obj, indx){
+							var tr = document.createElement('tr');
+							for(var key in obj){
+								var td = document.createElement("td");
+								td.textContent = obj[key];
+								tr.appendChild(td);
+							}
+							trRows.push(tr);
+						});
+
+						return trRows;
+
+					}else{
+						this.getRows().done(function(data){
+						
+						$.each(data, function(indx, obj){
+							var tr = document.createElement('tr');
+							for(var key in obj){
+								var td = document.createElement('td');
+								td.textContent = obj[key];
+								tr.appendChild(td);
+							}
+							frag.appendChild(tr);
+						});
+						self.tbody.appendChild(frag);
+				
+					})
+					.fail(function(err){
+						console.log("something went wrong in the createRows()")
+					});
+
+
+				}
+
+					
+			},
+
 			create_footer : function(){
 				var div = document.createElement('div');
 				div.className = 'cltable_footer';
@@ -249,7 +300,7 @@
 				var btn_pressed = $(e.target);
 				var val = e.target.dataset['btntype'];
 				var index = e.target.dataset['index'];
-				console.log(this.max_counter);
+				
 				if(index) index = parseInt(index);
 
 				switch(val){
@@ -386,7 +437,8 @@
 				if(rows && pageNum > 0){
 					// if they are plain objects, create tr's for them
 					if(!rows[0].tagName || rows[0].tagName !== 'TR'){
-						rows = this.createRows(rows);
+					
+						rows = this.createRows(rows);                    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 					}
 
 					if(rows.length < this.rows_per_page){
@@ -547,6 +599,7 @@
 					return this.rowsPromise;
 				},
 				createRows  :function(rows){
+					//debugger;
 					var self = this;
 					var frag = document.createDocumentFragment();
 					var trRows = [];
