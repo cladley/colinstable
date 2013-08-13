@@ -312,7 +312,21 @@
 						break;
 
 					default:
-						this.toggleButtonClass(btn_pressed);
+
+					
+						// If we click the last numbered button, then we have to redraw the numberBar to show the 
+						// last remaining from last - 4 to last
+						if(btn_pressed.attr('data-isLast')){
+							var buttons = this.createNumberBarButtons(this.num_of_pages - 4, this.num_of_pages);
+							this.updateNumbersBar(this.numbersBar, buttons);
+							this.toggleButtonClass(this.num_of_pages);
+						}else{
+
+							this.toggleButtonClass(btn_pressed);
+						}
+
+						this.first_screen = false;
+
 						this.showPage(parseInt(val));
 						this.bar_counter = index;
 						break;
@@ -325,7 +339,7 @@
 				var buttons = [];
 				var diff = to - from;
 				var max;
-
+			
 				if(diff > 4){
 					this.isShortBar = true;
 					btnNums = [from, from+1, from+2, '...', to];
