@@ -9,7 +9,31 @@
     		return temp;
 		};
 
+		//////////////////////////////////////////////////////////
+		// Simple loading overlay for when records are being    //
+		// fetched from the server                              //
+		//////////////////////////////////////////////////////////         
 		
+		var loadingOverlay = {
+			init : function(container){
+				this.$container = container;
+				this.create();
+			},
+			create : function(){
+				var div = document.createElement("div");
+				var img = document.createElement("img");
+
+				img.src = "../img/loading30.gif";
+				div.appendChild(img);
+				div.className = ' cltable_loading_overlay';
+				this.$container.append(div);
+			},
+			remove : function(){
+				$('.cltable_loading_overlay').remove();
+			}
+		};
+
+
 		//////////////////////////////////////////////////////////
 		//  sorter   :  Setup and implements sorting on columns //
 		//////////////////////////////////////////////////////////
@@ -22,7 +46,7 @@
 			},
 			// We setup sorting on column names that the user passes in
 			setup_sorting : function(column_names){
-				debugger;
+			
 				var self = this;
 				var dict = {};
 				// first record which columns and place in object
@@ -520,19 +544,21 @@
 						this.tbody = this.$table.children('tbody')[0];
 						this.$tbody = $(this.tbody);
 						this.rowsPromise = $.Deferred();
-				
+						this.setup_extra_html(this.$table);
+
 						if(this.options.url){
 							setTimeout(function(){
 								self.fetchRecords(self.options.url);
-							},3000);
+							},10000);
 							//this.fetchRecords(this.options.url);
 							// Not implemented yet
 							//this.add_loading_overlay();
+							loadingOverlay.init(this.container);
 						}else{
 							this.get_rows_from_table();
 						}
 							
-						this.setup_extra_html(this.$table);
+						
 						if(this.options.url) this.createRows();
 					
 						if(this.options.sortOn instanceof Array){
@@ -556,7 +582,14 @@
 					this.rowsPromise.resolve(rows);
 				},
 
-			
+				add_loading_overlay : function(){
+					var p = document.createElement("p");
+					//debugger;
+					p.textContent = "Loading";
+					p.className += ' cltable_loading_overlay';
+					$('.cltable_container').append(p);
+
+				},
 				// Create a container around the table and add a footer div
 				setup_extra_html : function(table){
 					this.container = $('<div>', {
@@ -567,7 +600,9 @@
 
 					table.wrap(this.container);
 				//	this.container.append(this.footer);
-					$('.cltable_container').append(self.footer);
+					//$('.cltable_container').append(self.footer);
+					this.container = $('.cltable_container');
+					this.container.append(this.footer);
 			
 				},
 				// places a loading screen on top of the tbody element when 
@@ -586,6 +621,7 @@
 					
 					dfd.done(function(data){
 					
+						loadingOverlay.remove();
 						self.rowsPromise.resolve(data);
 					})
 					.fail(function(err){
