@@ -195,7 +195,7 @@
 			
 
 				getRows().done(function(data){
-			
+					console.log("Here I am");
 					self.rows = data;
 					self.row_count = self.rows.length;
 					self.rows_per_page = items_per_page;
@@ -496,7 +496,7 @@
 
 		var defaults = {
 			pagination : false,
-			items_per_page : 7,
+			items_per_page : 5,
 			draggable : true
 		};
 		//////////////////////////////////////////////
@@ -519,12 +519,17 @@
 						this.rowsPromise = null;
 						this.tbody = this.$table.children('tbody')[0];
 						this.$tbody = $(this.tbody);
+						this.rowsPromise = $.Deferred();
 				
 						if(this.options.url){
-			
-							this.fetchRecords(this.options.url);
+							setTimeout(function(){
+								self.fetchRecords(self.options.url);
+							},3000);
+							//this.fetchRecords(this.options.url);
 							// Not implemented yet
 							//this.add_loading_overlay();
+						}else{
+							this.get_rows_from_table();
 						}
 							
 						this.setup_extra_html(this.$table);
@@ -546,12 +551,12 @@
 	      					dragTable.init(this.table,this.$table, this.$tbody);
 						}
 				},
-
-				random : function(){
-					console.log("this is random");
-					console.log(this);
+				get_rows_from_table : function(){
+					var rows = this.$tbody.children('tr');
+					this.rowsPromise.resolve(rows);
 				},
 
+			
 				// Create a container around the table and add a footer div
 				setup_extra_html : function(table){
 					this.container = $('<div>', {
@@ -578,7 +583,7 @@
 						type : 'GET'
 					});
 
-					this.rowsPromise = $.Deferred();
+					
 					dfd.done(function(data){
 					
 						self.rowsPromise.resolve(data);
@@ -588,14 +593,17 @@
 					});
 				},
 				getRows : function(){
+
 					// if its null, it means that we are just getting the rows that
 					// are already in the table, otherwise we are getting the rows
 					// from a server, so we return the promise
-					if(this.rowsPromise === null){
-						this.rowsPromise = $.Deferred();
-						var rows = this.$tbody.children('tr');
-						this.rowsPromise.resolve(rows);
-					}
+					// if(this.rowsPromise === null){
+					// 		console.log("In rows promise");
+					// 		debugger;
+					// 	this.rowsPromise = $.Deferred();
+					// 	var rows = this.$tbody.children('tr');
+					// 	this.rowsPromise.resolve(rows);
+					// }
 					return this.rowsPromise;
 				},
 				createRows  :function(rows){
